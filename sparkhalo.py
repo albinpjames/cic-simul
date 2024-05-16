@@ -17,13 +17,13 @@ class SimulData(object):
 
     def cic(self,nw_boxsize,massrange):
         
-        self.cutside = int(self.boxsize/nw_boxsize)
-        self.totalboxes = int(self.cutside**3) 
-        self.cicdata = np.zeros(self.totalboxes)
+        cutside = int(self.boxsize/nw_boxsize)
+        totalboxes = int(cutside**3) 
+        self.cicdata = np.zeros(totalboxes)
 
-        x_bins_dd = pos_start[0] + np.linspace(0,nw_boxsize*cutside,cutside+1)
-        y_bins_dd = pos_start[1] + np.linspace(0,nw_boxsize*cutside,cutside+1)
-        z_bins_dd = pos_start[2] + np.linspace(0,nw_boxsize*cutside,cutside+1)
+        x_bins_dd = np.linspace(0,nw_boxsize*cutside,cutside+1)
+        y_bins_dd = np.linspace(0,nw_boxsize*cutside,cutside+1)
+        z_bins_dd = np.linspace(0,nw_boxsize*cutside,cutside+1)
 
         data = self.cat[["xpos","ypos","zpos"]][(massrange[0] <= self.cat["halomass"]) & (self.cat["halomas"] < massrange[1])]
         data = np.array([data['xpos'], data['ypos'], data['zpos']]).T
@@ -117,7 +117,7 @@ if __init__ == '__main__':
         for nw_boxsize in nw_boxsizes: 
             print(f"Boxsize being computed: {nw_boxsize}")
             simul.cic(nw_boxsize,massrange)
-            simul.getcicdata()
+            print(simul.getcicdata())
 
 
 
