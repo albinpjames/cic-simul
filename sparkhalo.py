@@ -15,26 +15,26 @@ class SimulData(object):
         self.boxsize = boxsize if boxsize is not None else params["boxsize"]  
         self.mass = mass if mass is not None else params["mass"]
 
-    def cic(self,data,nw_boxsize):
+    def cic(self,nw_boxsize,massrange):
         
-        cutside = int(self.boxsize/nw_boxsize)
+        self.cutside = int(self.boxsize/nw_boxsize)
+        self.totalboxes = int(self.cutside**3) 
+        self.cicdata = np.zeros(self.totalboxes)
 
         x_bins_dd = pos_start[0] + np.linspace(0,nw_boxsize*cutside,cutside+1)
         y_bins_dd = pos_start[1] + np.linspace(0,nw_boxsize*cutside,cutside+1)
         z_bins_dd = pos_start[2] + np.linspace(0,nw_boxsize*cutside,cutside+1)
-        try:
-            boxdata = binned_statistic_dd(data
+
+        data = self.cat[["xpos","ypos","zpos"]][(massrange[0] <= self.cat["halomass"]) & (self.cat["halomas"] < massrange[1])]
+        data = np.array([data['xpos'], data['ypos'], data['zpos']]).T
+        boxdata = binned_statistic_dd(data
                 ,values = None, statistic = 'count', 
                 bins =[x_bins_dd, y_bins_dd, z_bins_dd]).statistic
-        except Exception as __e:
-            print(x_bins_dd)
-            print(y_bins_dd)
-            print(z_bins_dd)
-            raise __e
 
-        boxdata = boxdata.ravel()
+        self.cicdata = boxdata.ravel()
 
-        return boxdata
+    def getcicdata(self):
+        return self.cicdata
 
 class abacussummit(SimulData):
     def __init__(self,
@@ -43,7 +43,8 @@ class abacussummit(SimulData):
                  mass: float = None # The mass of the particles in the simulation
                  type : str = None,
                  cosmo : str = None,
-                 intcont : str = None ) -> None:
+                 intcont : str = None,
+                 dataloc: str = None  ) -> None:
         super().__init__(type,params,boxsize,mass)
         self.type = type if type is not None else params["type"]
         self.cosmo = cosmo if cosmo is not None else params["cosmo"]
@@ -55,7 +56,7 @@ class abacussummit(SimulData):
 
         # Location of the data
         file = os.path.join(
-            params.datadirec,
+            self.dataloc,
             "Simulations/AbacusSummit_Public_Data_Access/AbacusSummit_"
             + params.type
             + "_"
@@ -106,7 +107,7 @@ if __init__ == '__main__':
     """ Redshifts & boxsizes to be computed """
     redshifts = ["3.000"]
     nw_boxsizes = [50,15,10,5]
-    halobins = 20
+    massrange = [10**5,10**15]
    
     for redshift in redshifts:
         print(f"redshift being computed: {redshift}")
@@ -114,24 +115,14 @@ if __init__ == '__main__':
         simul.readdata(redshift,clms)
 
         for nw_boxsize in nw_boxsizes: 
-
             print(f"Boxsize being computed: {nw_boxsize}")
-            cutside = int(simul.boxsize/nw_boxsize)
-            print(f"The times the box length is cut: {cutside}")
-            totalboxes = int(cutside**3) 
-            print(f"The total number of boxes: {totalboxes}")
-
-            cicdata = np.zeros((totalboxes,halobins))
+            simul.cic(nw_boxsize,massrange)
+            simul.getcicdata()
 
 
-            binedge = np.logspace(
-                np.log(np.min(simul.cat["halomass"])),
-                np.log(np.max(simul.cat["halomass"])),
-                halobins + 1,
-                base=math.e)
 
-            for i in range(halobins):
-                data = simul.cat[["xpos","ypos","zpos"]][(binedge[i] <= simul.cat["halomass"]) & (simul.cat["halomas"] < binedge[i + 1])]
-                data = np.array([data['xpos'], data['ypos'], data['zpos']]).T
-                cicdata[:,i] = simul.cic(data,nw_boxsize)
+
+
+
+
 
