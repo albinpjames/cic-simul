@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import numpy as np
 import math
+from astropy.table import Table, vstack
 from abacusnbody.data.compaso_halo_catalog import CompaSOHaloCatalog
 from scipy.stats import binned_statistic_dd 
 
@@ -51,11 +52,23 @@ class abacussummit(SimulData):
         self.intcont = intcont if intcont is not None else params["intcont"]
         self.dataloc = dataloc if dataloc is not None else params["dataloc"]
     
+    def readall(self, path, clms):
+        self.cat = CompaSOHaloCatalog(path, cleaned=False)  # Reads the data
+        self.cat = self.cat.halos[clms]  # Reads the given column and saves it to an array(
+    
+    def read1by1(self, path, clms):
+        self.cat = Table()
+        files = Path(path).glob('*.asdf')
+        for file in files:
+            data = CompaSOHaloCatalog(file, cleaned=False)
+            self.cat = vstack([self.cat, data.halos[clms]])
+            del data
+
     def readdata(self, redshift: float = None, clms: list = None):
         print("Reading the data")
 
         # Location of the data
-        file = os.path.join(
+        path = os.path.join(
             self.dataloc,
             "AbacusSummit_Public_Data_Access/AbacusSummit_"
             + self.type
@@ -67,8 +80,11 @@ class abacussummit(SimulData):
             "halo_info/",
         )
 
-        self.cat = CompaSOHaloCatalog(file, cleaned=False)  # Reads the data
-        self.cat = self.cat.halos[clms]  # Reads the given column and saves it to an array
+        # Reads all the data together
+        # self.readall(path, clms)
+
+        # Reads the data file by file
+        self.read1by1(path, clms)
 
         if "N" in clms:
             print("converting to mass")
@@ -92,7 +108,7 @@ class abacussummit(SimulData):
 
 if __name__ == '__main__':
     
-    params = {
+    base2000 = {
         "dataloc" : "/mnt/data/DATA/Simulations",
         "name": "abacussummit",  # The name of the simulation
         "type": "base",  # The type of simulation (base, small for abacussumit)
@@ -101,8 +117,18 @@ if __name__ == '__main__':
         "boxsize": 2000,  # The box size of the simulation
         "mass": 2.109081520453063 * 10**9,  # The mass of the particles in the simulation
         }
-    
-    simul = abacussummit(params)
+
+    small500 = {
+        "dataloc" : "/mnt/dark/Projects/3.CUSAT/Data/Simulations",
+        "name": "abacussummit",  # The name of the simulation
+        "type": "small",  # The type of simulation (base, small for abacussumit)
+        "cosmo": "c000",  # The cosmology used in the simulation
+        "intcont": "ph3000",  # The initial condition used for the simulation
+        "boxsize": 500,  # The box size of the simulation
+        "mass": 2.109081520453063 * 10**9,  # The mass of the particles in the simulation
+    }
+
+    simul = abacussummit(small500)
 
     """ Redshifts & boxsizes to be computed """
     redshifts = ["3.000"]
