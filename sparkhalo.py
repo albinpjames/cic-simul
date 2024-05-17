@@ -40,12 +40,12 @@ class abacussummit(SimulData):
     def __init__(self,
                  params,
                  boxsize: int = None, # The box size of the simulation
-                 mass: float = None # The mass of the particles in the simulation
+                 mass: float = None, # The mass of the particles in the simulation
                  type : str = None,
                  cosmo : str = None,
                  intcont : str = None,
                  dataloc: str = None  ) -> None:
-        super().__init__(type,params,boxsize,mass)
+        super().__init__(params,boxsize,mass)
         self.type = type if type is not None else params["type"]
         self.cosmo = cosmo if cosmo is not None else params["cosmo"]
         self.intcont = intcont if intcont is not None else params["intcont"]
@@ -57,12 +57,12 @@ class abacussummit(SimulData):
         # Location of the data
         file = os.path.join(
             self.dataloc,
-            "Simulations/AbacusSummit_Public_Data_Access/AbacusSummit_"
-            + params.type
+            "AbacusSummit_Public_Data_Access/AbacusSummit_"
+            + self.type
             + "_"
-            + params.cosmo
+            + self.cosmo
             + "_"
-            + params.intcont,
+            + self.intcont,
             "halos/z" + redshift,
             "halo_info/",
         )
@@ -90,10 +90,10 @@ class abacussummit(SimulData):
 
     
 
-if __init__ == '__main__':
+if __name__ == '__main__':
     
     params = {
-        "dataloc" : "C:/"
+        "dataloc" : "/mnt/data/DATA/Simulations",
         "name": "abacussummit",  # The name of the simulation
         "type": "base",  # The type of simulation (base, small for abacussumit)
         "cosmo": "c000",  # The cosmology used in the simulation
@@ -113,11 +113,12 @@ if __init__ == '__main__':
         print(f"redshift being computed: {redshift}")
         clms = ["N","SO_central_particle"]
         simul.readdata(redshift,clms)
+        print(simul.cat)
 
-        for nw_boxsize in nw_boxsizes: 
-            print(f"Boxsize being computed: {nw_boxsize}")
-            simul.cic(nw_boxsize,massrange)
-            print(simul.getcicdata())
+        # for nw_boxsize in nw_boxsizes: 
+        #     print(f"Boxsize being computed: {nw_boxsize}")
+        #     simul.cic(nw_boxsize,massrange)
+        #     print(simul.getcicdata())
 
 
 
